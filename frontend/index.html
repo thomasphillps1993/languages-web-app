@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Languages WebSocket App</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Languages Tracker</h1>
+  <form id="langForm">
+    <input type="text" id="name" placeholder="Language Name" required />
+    <input type="date" id="startDate" required />
+    <input type="number" id="ability" placeholder="Ability (1-10)" min="1" max="10" required />
+    <button type="submit">Send</button>
+  </form>
+
+  <div id="status"></div>
+
+<script>
+let ws;
+let connectionId = null;
+
+function createWebSocket() {
+  ws = new WebSocket("wss://i3fj576dcc.execute-api.eu-west-2.amazonaws.com/production/");
+
+  ws.onopen = () => {
+    status.textContent = "✅ Connected";
+  };
+
+  ws.onclose = () => {
+    status.textContent = "❌ Disconnected";
+    setTimeout(createWebSocket, 5000); // Retry connection after 5 seconds
+  };
+
+  ws.onerror = (err) => {
+    status.textContent = "⚠️ Error occurred";
+    console.error("WebSocket Error:", err);
+  };
+
+  ws.onmessage = (msg) => {
+    console.log("Received:", msg.data);
+    const data = JSON.parse(msg.data);
+
+    if (data.action === "register") {
+      connectionId = data.connectionId;
+      console.log("✅ Registered connection ID:", connectionId);
+    }
+  };
+}
+
+// Initial WebSocket connection
+createWebSocket();
+
+document.getElementById("langForm").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const data = {
+    action: "sendMessage",
+    Name: document.getElementById("name").value,
+    StartedLearningDate: document.getElementById("startDate").value,
+    AbilityRating: parseInt(document.getElementById("ability").value, 10),
+    connectionId // Send connection ID
+  };
+  if (ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(data));
+    status.textContent = "📤 Sent: " + JSON.stringify(data);
+  } else {
+    status.textContent = "⚠️ WebSocket is not open.";
+  }
+});
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,23 @@
+body {
+  font-family: sans-serif;
+  padding: 2rem;
+  background-color: #fdf6ec;
+}
+h1 {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+}
+form {
+  display: flex;
+  flex-direction: column;
+  max-width: 300px;
+}
+input, button {
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  font-size: 1rem;
+}
+#status {
+  margin-top: 1rem;
+  font-weight: bold;
+}
