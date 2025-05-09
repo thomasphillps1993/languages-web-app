@@ -22,27 +22,34 @@ let ws;
 let connectionId = null;
 
 function createWebSocket() {
-  ws = new WebSocket("wss://i3fj576dcc.execute-api.eu-west-2.amazonaws.com/production/");
+  ws = new WebSocket("wss://i3fj576dcc.execute-api.eu-west-2.amazonaws.com/production/?user=tom");
 
-  ws.onopen = () => {
-    status.textContent = "✅ Connected";
-  };
+  ws.onopen = (event) => {
+  debugger;
+  // Assuming you're getting the connectionId from the event or response
+  const connectionId = event.connectionId; // Replace with the actual source of connectionId
+  document.getElementById('status').textContent = `✅ Connected (ID: ${connectionId})`;
+  console.log("WebSocket connected with connectionId:", connectionId);
+};
 
   ws.onclose = () => {
-    status.textContent = "❌ Disconnected";
-    setTimeout(createWebSocket, 5000); // Retry connection after 5 seconds
+    document.getElementById('status').textContent = "❌ Disconnected";
+    console.log("WebSocket disconnected");
+    setTimeout(createWebSocket, 5000); // Reconnect after 5 seconds
   };
 
   ws.onerror = (err) => {
-    status.textContent = "⚠️ Error occurred";
+    document.getElementById('status').textContent = "⚠️ Error occurred";
     console.error("WebSocket Error:", err);
   };
 
   ws.onmessage = (msg) => {
-    console.log("Received:", msg.data);
+    debugger;
     const data = JSON.parse(msg.data);
+    console.log("Received message:", data);
 
-    if (data.action === "register") {
+    if (data.action === "connected") {
+      debugger;
       connectionId = data.connectionId;
       console.log("✅ Registered connection ID:", connectionId);
     }
@@ -59,13 +66,14 @@ document.getElementById("langForm").addEventListener("submit", (e) => {
     Name: document.getElementById("name").value,
     StartedLearningDate: document.getElementById("startDate").value,
     AbilityRating: parseInt(document.getElementById("ability").value, 10),
-    connectionId // Send connection ID
+    connectionId // Send connectionId with message
   };
+
   if (ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify(data));
-    status.textContent = "📤 Sent: " + JSON.stringify(data);
+    document.getElementById('status').textContent = "📤 Sent message!";
   } else {
-    status.textContent = "⚠️ WebSocket is not open.";
+    document.getElementById('status').textContent = "⚠️ WebSocket is not open.";
   }
 });
 

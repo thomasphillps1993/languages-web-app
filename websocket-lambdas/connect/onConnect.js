@@ -2,30 +2,25 @@ const AWS = require("aws-sdk");
 const ddb = new AWS.DynamoDB.DocumentClient();
 
 exports.handler = async (event) => {
+  console.log("Received connect event:", JSON.stringify(event, null, 2));
+
+  // Extract the connectionId from the event
   const connectionId = event.requestContext.connectionId;
-  const domainName = event.requestContext.domainName;
-  const stage = event.requestContext.stage;
 
-  // Store the connection ID in DynamoDB
-  await ddb.put({
-    TableName: "WebSocketConnections",
-    Item: { connectionId }
-  }).promise();
+  // Save the connectionId to DynamoDB
+  try {
+    await ddb.put({
+      TableName: "WebSocketConnections",  // DynamoDB table name
+      Item: { connectionId }
+    }).promise();
 
-  // Prepare to send message back to the client
-  const apiGateway = new AWS.ApiGatewayManagementApi({
-    endpoint: `${domainName}/${stage}`
-  });
-
-  const message = {
-    action: "register",
-    connectionId: connectionId
-  };
-
-  await apiGateway.postToConnection({
-    ConnectionId: connectionId,
-    Data: JSON.stringify(message)
-  }).promise();
-
-  return { statusCode: 200 };
+    // Respond with 200 status code to acknowledge the connection
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ action: "connected", data:connectionId })
+    };
+  } catch (error) {
+    console.error("Error storing connectionId in DynamoDB:", error);
+    return { statusCode: 500, body: "Failed to store connectionId" };
+  }
 };
